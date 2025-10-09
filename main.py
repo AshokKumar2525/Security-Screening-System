@@ -3,7 +3,7 @@ import numpy as np
 import os
 import face_recognition
 from playsound import playsound
-from message import send_call, send_email, send_sms
+
 import time
 import sys
 from gui.gui import guiwindow
