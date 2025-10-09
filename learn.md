@@ -63,9 +63,6 @@ project/
 ├── image_logs/
 │   └── matched_individual_image.jpg
 │
-│
-├──config/
-|   └──system_config.json
 ├── csv_logs/
 │   └──security_log.csv
 │
@@ -100,8 +97,6 @@ __data/__: Each subfolder represents an individual, containing multiple images t
 __gui/__: Logic for the graphical User Inerface of the System.
 
 __image_log/__: If a match is found, the individual's image is automatically logged here.If it doesn't exist, created automatically.
-
-__config/__: Stores face recognition threshold configuration.
 
 __csv_log/__: If a match is found, the individual's data is automatically logged here in a csv file.If it doesn't exist, created automatically. The gui has a 'export logs' button to export and download this file when needed.
 
