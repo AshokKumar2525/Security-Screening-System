@@ -84,6 +84,13 @@ class guiwindow:
                        background=[('active', '#005f5f'), ('!disabled', '#008080')],
                        foreground=[('disabled', '#a9a9a9')])
 
+        # Load threshold value from config or use default
+        initial_threshold = self.load_threshold_from_config()
+        
+        # Threshold configuration variables
+        self.threshold_var = tk.DoubleVar(value=initial_threshold)
+        self.threshold_frame_visible = False
+
         # --- Header ---
         self.header_frame = ttk.Frame(self.root)
         self.header_frame.pack(pady=20)
@@ -97,7 +104,6 @@ class guiwindow:
         self.video_label.pack()
         self.video_label.configure(background='black')
 
-
         # --- Status Panel ---
         self.status_panel = ttk.Frame(self.root, padding=10)
         self.status_panel.pack(pady=20)
@@ -106,7 +112,6 @@ class guiwindow:
         self.status_label = ttk.Label(self.status_panel, text="Initializing system...", style="Status.TLabel")
         self.status_label.pack(side=tk.LEFT)
         self.update_status_indicator('gray')
-
 
         # --- Control Panel ---
         self.control_panel = ttk.Frame(self.root, padding=10)
@@ -125,17 +130,29 @@ class guiwindow:
         self.about_button = ttk.Button(self.control_panel, text="ℹ️ About", command=self.show_about, width=14)
         self.about_button.grid(row=0, column=3, padx=10)
 
+        # Threshold configuration button
+        self.threshold_button = ttk.Button(
+            self.control_panel, 
+            text="⚙️ Threshold", 
+            command=self.toggle_threshold_settings,
+            width=14
+        )
+        self.threshold_button.grid(row=0, column=4, padx=10)
+
         # Tooltips
         ToolTip(self.start_button, "Start camera (Ctrl+S). Initializes webcam and status announcements.")
         ToolTip(self.pause_button, "Pause/Resume detection (Space). Keeps the last frame visible.")
         ToolTip(self.export_log_button, "Export csv_logs/security_log.csv to a chosen location (Ctrl+E).")
         ToolTip(self.about_button, "About this application.")
+        ToolTip(self.threshold_button, "Adjust recognition strictness (0.1-0.39)")
 
         # Keyboard shortcuts
         self.root.bind("<Control-s>", lambda e: self.start_camera())
         self.root.bind_all("<space>", lambda e: self.toggle_pause())
         self.root.bind("<Control-e>", lambda e: self.export_log())
 
+        # Setup threshold controls
+        self.setup_threshold_controls()
 
         self.get_frame = get_frame_callback
         self.status_callback = status_callback
@@ -150,7 +167,279 @@ class guiwindow:
         self._get_detection_time = None
 
         self.camera_started = False
+        
+        # Update slider when variable changes
+        def update_threshold_display(*args):
+            if hasattr(self, 'slider_canvas'):
+                self.draw_slider()
+        
+        self.threshold_var.trace('w', update_threshold_display)
+        
         self.update_frame()
+
+    def load_threshold_from_config(self):
+        """Load threshold value from config file, return default if not exists"""
+        try:
+            config_path = "config/system_config.json"
+            if os.path.exists(config_path):
+                import json
+                with open(config_path, 'r') as f:
+                    config_data = json.load(f)
+                    threshold = config_data.get('recognition_threshold', 0.4)
+                    last_updated = config_data.get('last_updated', 'Never')
+                    print(f"[Config] Loaded threshold from config: {threshold} (Last updated: {last_updated})")
+                    return threshold
+        except Exception as e:
+            print(f"[Config] Error loading threshold config: {e}")
+        
+        # Return default if config doesn't exist or error occurs
+        return 0.4
+
+    def save_threshold_to_config(self, threshold_value):
+        """Save threshold value to config file for next startup"""
+        try:
+            import json
+            config_dir = "config"
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+                
+            config_path = os.path.join(config_dir, "system_config.json")
+            current_time = time.ctime()
+            config_data = {
+                        'recognition_threshold': threshold_value,
+                        'last_updated': current_time
+                }            
+            with open(config_path, 'w') as f:
+                json.dump(config_data, f, indent=2)
+            print(f"[Config] Threshold saved to config: {threshold_value} at {current_time}")
+        except Exception as e:
+            print(f"[Config] Error saving threshold config: {e}")
+
+    def setup_threshold_controls(self):
+        """Add threshold configuration controls to GUI"""
+        # Threshold settings frame (initially hidden)
+        self.threshold_settings_frame = ttk.LabelFrame(self.root, text="⚙️ Recognition Strictness Settings",
+                                                       padding=15,style='Custom.TLabelframe')
+        
+        self.style.configure('Custom.TLabelframe', background='white', foreground='black',bordercolor='#555555')
+        self.style.configure('Custom.TLabelframe.Label', background='white', foreground='black')
+        self.style.configure('Custom.TFrame', background='white')
+        
+        container = ttk.Frame(self.threshold_settings_frame, style='Custom.TFrame')
+        container.pack(fill='x', padx=5, pady=5)
+        
+        info_text = "• Lower values = More strict (fewer matches, higher confidence required)\n• Range: 0.10 to 0.39 | Default: 0.40\n• Configure before starting camera"
+        info_label = ttk.Label(container, text=info_text, font=("Segoe UI", 9), foreground='#333333',
+                                background='white', justify=tk.LEFT)
+        info_label.pack(anchor='w', pady=(0, 15))
+        
+        # Slider frame
+        slider_frame = ttk.Frame(container, style='Custom.TFrame')
+        slider_frame.pack(fill='x', pady=8)
+        
+        ttk.Label(slider_frame, text="Threshold:", 
+                 foreground='black', background='white').pack(side=tk.LEFT, padx=(0, 15))
+        
+        self.create_custom_slider(slider_frame)
+        
+        # Button frame
+        button_frame = ttk.Frame(container, style='Custom.TFrame')
+        button_frame.pack(fill='x', pady=(15, 5))
+        
+        self.apply_threshold_btn = tk.Button(
+            button_frame,
+            text="✅ Apply Threshold",
+            command=self.apply_threshold,
+            bg='#4CAF50',
+            fg='white',
+            font=("Segoe UI", 10, "bold"),
+            relief='raised',
+            bd=2,
+            padx=15,
+            pady=5,
+            cursor='hand2'
+        )
+        self.apply_threshold_btn.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Reset button
+        self.reset_threshold_btn = tk.Button(
+            button_frame,
+            text="🔄 Reset to Default", 
+            command=self.reset_threshold,
+            bg='#FF9800',
+            fg='white',
+            font=("Segoe UI", 10, "bold"),
+            relief='raised',
+            bd=2,
+            padx=15,
+            pady=5,
+            cursor='hand2'
+        )
+        self.reset_threshold_btn.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Close button
+        self.close_threshold_btn = tk.Button(
+            button_frame,
+            text="❌ Close",
+            command=self.toggle_threshold_settings,
+            bg='#f44336',
+            fg='white', 
+            font=("Segoe UI", 10, "bold"),
+            relief='raised',
+            bd=2,
+            padx=15,
+            pady=5,
+            cursor='hand2'
+        )
+        self.close_threshold_btn.pack(side=tk.LEFT)
+
+    def create_custom_slider(self, parent):
+        """Create a custom interactive slider with green progress bar"""
+        # Main slider container
+        slider_container = ttk.Frame(parent, style='Custom.TFrame')
+        slider_container.pack(side=tk.LEFT, fill='x', expand=True)
+        
+        # Create canvas for custom slider with more vertical space
+        self.slider_canvas = tk.Canvas(
+            slider_container,
+            height=60, 
+            bg='white',
+            highlightthickness=0
+        )
+        self.slider_canvas.pack(fill='x', pady=5)
+        self.slider_width = 250
+        self.slider_height = 8
+        self.slider_x = 10
+        self.slider_y = 40
+        self.knob_radius = 10
+        
+        # Draw initial slider
+        self.draw_slider()
+        
+        # Bind mouse events for interactivity
+        self.slider_canvas.bind("<Button-1>", self.on_slider_click)
+        self.slider_canvas.bind("<B1-Motion>", self.on_slider_drag)
+        self.slider_canvas.bind("<Enter>", lambda e: self.slider_canvas.config(cursor='hand2'))
+        self.slider_canvas.bind("<Leave>", lambda e: self.slider_canvas.config(cursor=''))
+
+    def draw_slider(self):
+        """Draw the slider with green progress bar"""
+        self.slider_canvas.delete("all")
+        
+        # Calculate current position
+        current_value = self.threshold_var.get()
+        normalized_pos = (current_value - 0.1) / (0.39 - 0.1)  # Normalize to 0-1
+        knob_x = self.slider_x + (normalized_pos * self.slider_width)
+        
+        # Draw track background
+        self.slider_canvas.create_rectangle(
+            self.slider_x, 
+            self.slider_y - self.slider_height//2,
+            self.slider_x + self.slider_width, 
+            self.slider_y + self.slider_height//2,
+            fill='#cccccc',
+            outline='#999999',
+            width=1
+        )
+        
+        # Draw progress bar (green filled portion)
+        self.slider_canvas.create_rectangle(
+            self.slider_x, 
+            self.slider_y - self.slider_height//2,
+            knob_x, 
+            self.slider_y + self.slider_height//2,
+            fill='#4CAF50',
+            outline='',
+            width=0
+        )
+        
+        # Draw value indicator ABOVE the track (in the empty space we created)
+        text_y = 15 
+        
+        # Text with nice styling - changed to black
+        self.slider_canvas.create_text(
+            knob_x,
+            text_y,
+            text=f"{current_value:.2f}",
+            fill='black',
+            font=("Segoe UI", 10, "bold")
+        )
+        
+        # Draw a line connecting text to knob for better visual connection
+        self.slider_canvas.create_line(
+            knob_x,
+            text_y + 8, 
+            knob_x,
+            self.slider_y - self.knob_radius - 2, 
+            fill='#666666',
+            width=1,
+            dash=(2, 2)
+        )
+        
+        # Draw knob (after text so it appears on top)
+        self.slider_canvas.create_oval(
+            knob_x - self.knob_radius,
+            self.slider_y - self.knob_radius,
+            knob_x + self.knob_radius, 
+            self.slider_y + self.knob_radius,
+            fill='#2196F3',
+            outline='#1976D2',
+            width=2
+        )
+
+    def on_slider_click(self, event):
+        """Handle slider click"""
+        self.on_slider_drag(event)
+
+    def on_slider_drag(self, event):
+        """Handle slider dragging"""
+        # Calculate normalized position
+        rel_x = max(0, min(event.x - self.slider_x, self.slider_width))
+        normalized_pos = rel_x / self.slider_width
+        
+        # Convert to actual value
+        new_value = 0.1 + (normalized_pos * (0.39 - 0.1))
+        new_value = round(new_value, 2) 
+        
+        # Update variable and redraw
+        self.threshold_var.set(new_value)
+        self.draw_slider()
+
+    def toggle_threshold_settings(self):
+        """Show/hide threshold settings frame"""
+        if not self.threshold_frame_visible:
+            self.threshold_settings_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+            self.threshold_frame_visible = True
+            self.threshold_button.config(text="⚙️ Hide Threshold")
+        else:
+            self.threshold_settings_frame.place_forget()
+            self.threshold_frame_visible = False
+            self.threshold_button.config(text="⚙️ Threshold")
+
+    def apply_threshold(self):
+        """Apply the selected threshold value"""
+        threshold_value = self.threshold_var.get()
+        
+        # Update the security system's threshold
+        if hasattr(self, 'get_frame'):
+            security_system = self.get_frame.__self__
+            security_system.user_conf_threshold = threshold_value
+            security_system.save_threshold_settings()
+            
+        # Also save to config file directly for GUI to load next time
+        self.save_threshold_to_config(threshold_value)
+            
+        self.update_status(f"Recognition threshold set to: {threshold_value:.2f}", "light blue")
+        print(f"[Config] Recognition threshold updated to: {threshold_value:.2f}")
+        
+        self.draw_slider()
+        self.toggle_threshold_settings()
+
+    def reset_threshold(self):
+        """Reset threshold to default value and auto-close"""
+        self.threshold_var.set(0.4)
+        self.draw_slider()  
+        self.apply_threshold()  
 
     def update_status_indicator(self, color):
         self.status_indicator.delete("all")
@@ -229,6 +518,12 @@ class guiwindow:
             self.start_button.config(state="disabled")
             self.pause_button.config(state="normal")
             self.export_log_button.config(state="normal")
+            
+            # Disable threshold controls
+            self.threshold_button.config(state="disabled")
+            if self.threshold_frame_visible:
+                self.toggle_threshold_settings() 
+                
             self.update_status("Camera starting...", color="green")
         else:
             self.update_status("Camera already started", color="green")
@@ -257,7 +552,8 @@ class guiwindow:
             "Security Screening System\n\n"
             "This GUI provides Start/Pause controls, status feedback, and log export.\n"
             "Shortcuts: Ctrl+S Start, Space Pause/Resume, Ctrl+E Export Log.\n"
-            
+            "Threshold Settings: Adjust recognition strictness (0.1-0.39) for different environments.\n"
+            "Lower values = More strict (fewer matches, higher confidence required)."
         )
         messagebox.showinfo("About", message)
 

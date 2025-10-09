@@ -13,6 +13,7 @@ import threading
 import torch
 import pathlib
 from voice import speak_event
+import json
 
 class SecuritySystem:
     def __init__(self):
@@ -49,6 +50,13 @@ class SecuritySystem:
         self.alarm_playing = False
         self.alarm_lock = threading.Lock()
 
+        # Confidence threshold configuration
+        self.face_conf_threshold = 0.4  # Default value
+        self.user_conf_threshold = 0.4  # User configured value
+        
+        # Load saved threshold if exists
+        self.load_threshold_settings()
+
         for directory in [self.IMAGE_LOG_DIR, self.CSV_LOG_DIR]:
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -64,6 +72,7 @@ class SecuritySystem:
         print("📋 Status Messages Feature: ✅ Active")
         print("🔍 Face Recognition: ✅ Using face_recognition library")
         print("🎯 Identity Matching: ✅ Real confidence scores from face encodings")
+        print(f"⚙️ Recognition Threshold: {self.user_conf_threshold:.2f}")
         
         self.detection_time = {}
         self.last_alarmed = {}
@@ -78,6 +87,35 @@ class SecuritySystem:
         self.ACCESSORY_CLASSES = ["mask", "sunglasses", "cap", "scarf-kerchief"]
         pathlib.PosixPath = temp
         
+    def load_threshold_settings(self):
+        """Load threshold setting from config file"""
+        config_file = "config/system_config.json"
+        try:
+            if os.path.exists(config_file):
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                    saved_threshold = config.get('recognition_threshold', 0.4)
+                    # Ensure the saved value is within allowed range
+                    if 0.1 <= saved_threshold <= 0.39:
+                        self.user_conf_threshold = saved_threshold
+                        print(f"[Config] Loaded threshold: {saved_threshold:.2f}")
+        except Exception as e:
+            print(f"[Config] Error loading settings: {e}")
+
+    def save_threshold_settings(self):
+        """Save threshold setting to config file"""
+        config_file = "config/system_config.json"
+        try:
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
+            config = {
+                'recognition_threshold': self.user_conf_threshold,
+                'last_updated': time.time()
+            }
+            with open(config_file, 'w') as f:
+                json.dump(config, f, indent=2)
+        except Exception as e:
+            print(f"[Config] Error saving settings: {e}")
+
     # Safe speak method that checks alarm state
     def safe_speak(self, event, text, sync=False):
         """Speak only if no alarm is currently playing"""
@@ -311,7 +349,8 @@ class SecuritySystem:
             best_match_index = np.argmin(face_distances)
             name = "No match"
 
-            if face_distances[best_match_index] < 0.4:
+            # Use user-configured threshold instead of hardcoded 0.4
+            if face_distances[best_match_index] < self.user_conf_threshold:
                 name = self.face_name[best_match_index]
                 confidence = (1 - face_distances[best_match_index]) * 100
                 confidence_text = f"{confidence:.2f}%"
@@ -384,6 +423,7 @@ class SecuritySystem:
                         self.log_event("High Threat", name, confidence, filename)
                     elif confidence > 70:
                         send_email(name, frame, confidence)
+                        
                         self.current_status = f"🚨 MEDIUM THREAT DETECTED: {name} - Security alert triggered! Email sent."
                         self.status_color = '#ff8800'  # Orange for medium threat
                         self.log_event("Medium Threat", name, confidence, filename)
