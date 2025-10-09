@@ -45,6 +45,10 @@ class SecuritySystem:
         self.IMAGE_LOG_DIR = "image_logs"
         self.CSV_LOG_DIR = "csv_logs"
 
+        # Audio control - Track alarm state
+        self.alarm_playing = False
+        self.alarm_lock = threading.Lock()
+
         for directory in [self.IMAGE_LOG_DIR, self.CSV_LOG_DIR]:
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -74,12 +78,41 @@ class SecuritySystem:
         self.ACCESSORY_CLASSES = ["mask", "sunglasses", "cap", "scarf-kerchief"]
         pathlib.PosixPath = temp
         
-        # Alarms
+    # Safe speak method that checks alarm state
+    def safe_speak(self, event, text, sync=False):
+        """Speak only if no alarm is currently playing"""
+        with self.alarm_lock:
+            if self.alarm_playing:
+                print(f"[Audio] Suppressing voice message during alarm: {text}")
+                return False
+        
+        speak_event(event, text, sync)
+        return True
+
+    # Alarms with alarm_playing flag management
     def threat_alarm(self):
-        threading.Thread(target=playsound, args=("alarms/threat.wav",), daemon=True).start()
+        def play_threat_alarm():
+            with self.alarm_lock:
+                self.alarm_playing = True
+            try:
+                playsound("alarms/threat.wav")
+            finally:
+                with self.alarm_lock:
+                    self.alarm_playing = False
+                    
+        threading.Thread(target=play_threat_alarm, daemon=True).start()
 
     def safe_alarm(self):
-        threading.Thread(target=playsound, args=("alarms/safe.wav",), daemon=True).start()
+        def play_safe_alarm():
+            with self.alarm_lock:
+                self.alarm_playing = True
+            try:
+                playsound("alarms/safe.wav")
+            finally:
+                with self.alarm_lock:
+                    self.alarm_playing = False
+                    
+        threading.Thread(target=play_safe_alarm, daemon=True).start()
 
     def run_in_background(self,func, *args, **kwargs):
         threading.Thread(target=func, args=args, kwargs=kwargs, daemon=True).start()
@@ -254,7 +287,7 @@ class SecuritySystem:
             self.detection_time.clear()
             
             self.current_status = f"⚠️ Please remove: {', '.join(accessories).title()}"
-            speak_event("remove_accessory", f"Please remove: {', '.join(accessories)}")
+            self.safe_speak("remove_accessory", f"Please remove: {', '.join(accessories)}")
             self.status_color = '#ff0000'
             return frame  # Skip face recognition while showing live frames
 
@@ -320,7 +353,7 @@ class SecuritySystem:
                     
                 last_time = self.last_alerted.get(name, 0)
                 if (curr_time - last_time) >= self.alert_cooldown:
-                        speak_event("face_detected", "Please stand still for 10 seconds.")
+                        self.safe_speak("face_detected", "Please stand still for 10 seconds.")
                         self.last_alerted[name] = curr_time
 
 
@@ -330,7 +363,7 @@ class SecuritySystem:
                 if name != "No match":
                     self.current_status = f"🚨 THREAT DETECTED: {name} - Security alert triggered!"
                     self.status_color = '#ff0000'  # Red for threat
-                    speak_event("scan_complete_threat", "scan complete", sync=True)
+                    self.safe_speak("scan_complete_threat", "scan complete", sync=True)
                     self.threat_alarm()
                     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                     filename = f"{name}_{timestamp}.jpg"
@@ -362,7 +395,7 @@ class SecuritySystem:
                 else:
                     self.current_status = "✅ SCAN COMPLETE: No match detected - You are safe to proceed"
                     self.status_color = '#00ff00'  # Green for safe
-                    speak_event("scan_complete_safe", "scan completed you are free to go.", sync=True)
+                    self.safe_speak("scan_complete_safe", "scan completed you are free to go.", sync=True)
                     self.safe_alarm()
 
                 self.last_alarmed[name] = curr_time
@@ -400,7 +433,7 @@ class SecuritySystem:
 
             # Play asynchronously but call resume_scanning after it finishes
             threading.Thread(
-                target=lambda: (speak_event(
+                target=lambda: (self.safe_speak(
                     "camera_start",
                     "Security Screening System starting. People are waiting in the line, please cooperate with the scanning procedure.",
                     sync=True  # force blocking in this thread so we know when it ends
