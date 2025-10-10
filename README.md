@@ -108,7 +108,7 @@ Only the issue with the label __gssoc25__ are open for GSSoC contributors right 
    - A GUI warning is shown telling the individual to remove it.
    - Face recognition is paused (frames keep running, no freezing).
    - Once the accessory is removed for a few consecutive frames, normal face recognition resumes.
-4. Once a clear face is detected, it checks the system’s database to see if the person is on a list of wanted, banned, or runaway individuals.
+4. Once a clear face is detected, it checks the system’s database to see if the person is on a list of wanted, banned, or runaway individuals. The system uses a standard threshold of 0.4 face distance or 60% confidence score to determine a match. Admin can manually change the threshold settings via the GUI. The threshold setting is specifically designed to range upto 0.39 face distance or only from 60-100 % match, since we are prioritising a strict face recognition in order to avoid mistaken identity & prevent unnecessary public alerts.
 5. The system takes around 10 seconds to carefully analyze the face and decide if it matches someone in the database.
 6. If the person is not in the database, a safe signal is shown, and they can continue without any problem.
 7. If the system does find a match:
@@ -124,7 +124,7 @@ Only the issue with the label __gssoc25__ are open for GSSoC contributors right 
 
 The system starts by organizing images into folders—one for each wanted person. More images improve accuracy. These images are then encoded using the face_recognition library, converting facial features into numerical values and labeling them based on folder names.
 
-During real-time scanning with OpenCV, the webcam detects and extracts faces, which are then compared with stored encodings. If the similarity is below 0.4, the person is considered a match. The system waits 10 seconds to confirm identity and avoids duplicate alerts within 30 seconds.
+During real-time scanning with OpenCV, the webcam detects and extracts faces, which are then compared with stored encodings. If the similarity is below 0.4, the person is considered a match. The system waits 10 seconds to confirm identity and avoids duplicate alerts within 30 seconds. The system uses a standard threshold of 0.4 face distance or 60% confidence score to determine a match. Admin can manually change the threshold settings via the GUI. The threshold setting is specifically designed to range upto 0.39 face distance or only from 60-100 % match, since we are prioritising a strict face recognition in order to avoid mistaken identity & prevent unnecessary public alerts.
 
 If no match is found, a safe_alarm is triggered. If a match is found, a threat_alarm is activated, followed by email and SMS alerts containing the individual’s name, photo, time, and IP location. If the threat is major (confidence > 90%), a call alert is also triggered.
 
@@ -239,7 +239,7 @@ git push origin YourBranchName
 
 1. This project is a working prototype built for security checkpoint scenarios. It showcases the core logic of real-time facial recognition and threat detection. The system is modular and can be expanded with IoT devices or a GUI if needed.
 
-2. The matching threshold is set lower to avoid false positives. As a result, a few false negatives may occur.
+2. The matching threshold is set lower to avoid false positives. As a result, a few false negatives may occur. False positives can be handled via extra document verification and other procedures but false negatives can lead to harassment.
 
 3. For better accuracy, it's advised to include a large and diverse set of images for each individual in the dataset.
 
