@@ -1,19 +1,42 @@
-import cv2
-import numpy as np
-import os
-import face_recognition
-from playsound import playsound
-from message import send_call, send_email, send_sms
-import time
-import sys
-from gui.gui import guiwindow
-import datetime
-import pickle
-import threading
-import torch
-import pathlib
-from voice import speak_event
-import json
+
+def _import_or_exit(module, pip_name=None, import_name=None):
+    try:
+        if import_name:
+            return __import__(import_name, fromlist=[module])
+        return __import__(module)
+    except ImportError:
+        pkg = pip_name if pip_name else module
+        print(f"\n[ERROR] Required package '{pkg}' is not installed.\nPlease install it with: pip install {pkg}\n")
+        exit(1)
+
+cv2 = _import_or_exit('cv2')
+np = _import_or_exit('numpy')
+os = _import_or_exit('os')
+face_recognition = _import_or_exit('face_recognition')
+playsound = _import_or_exit('playsound')
+try:
+    from message import send_call, send_email, send_sms
+except ImportError:
+    print("\n[ERROR] Required module 'message' is missing or has import errors.\n")
+    exit(1)
+time = _import_or_exit('time')
+sys = _import_or_exit('sys')
+try:
+    from gui.gui import guiwindow
+except ImportError:
+    print("\n[ERROR] Required module 'gui.gui' is missing or has import errors.\n")
+    exit(1)
+datetime = _import_or_exit('datetime')
+pickle = _import_or_exit('pickle')
+threading = _import_or_exit('threading')
+torch = _import_or_exit('torch')
+pathlib = _import_or_exit('pathlib')
+try:
+    from voice import speak_event
+except ImportError:
+    print("\n[ERROR] Required module 'voice' is missing or has import errors.\n")
+    exit(1)
+json = _import_or_exit('json')
 
 class SecuritySystem:
     def __init__(self):

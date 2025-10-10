@@ -1,10 +1,24 @@
-# voice.py
-from gtts import gTTS
-from playsound import playsound
-import tempfile
-import threading
-import os
-import time
+
+def _import_or_exit(module, pip_name=None, import_name=None):
+    try:
+        if import_name:
+            return __import__(import_name, fromlist=[module])
+        return __import__(module)
+    except ImportError:
+        pkg = pip_name if pip_name else module
+        print(f"\n[ERROR] Required package '{pkg}' is not installed.\nPlease install it with: pip install {pkg}\n")
+        exit(1)
+
+try:
+    from gtts import gTTS
+except ImportError:
+    print("\n[ERROR] Required package 'gTTS' is not installed.\nPlease install it with: pip install gTTS\n")
+    exit(1)
+playsound = _import_or_exit('playsound')
+tempfile = _import_or_exit('tempfile')
+threading = _import_or_exit('threading')
+os = _import_or_exit('os')
+time = _import_or_exit('time')
 
 # Cache for repeated phrases
 _voice_cache = {}

@@ -1,17 +1,41 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
-import datetime
-import cv2
-import os
-import re
-from dotenv import load_dotenv
-from twilio.rest import Client
-import phonenumbers
-from phonenumbers import geocoder, carrier
-import requests
-import logging
+
+def _import_or_exit(module, pip_name=None, import_name=None):
+    try:
+        if import_name:
+            return __import__(import_name, fromlist=[module])
+        return __import__(module)
+    except ImportError:
+        pkg = pip_name if pip_name else module
+        print(f"\n[ERROR] Required package '{pkg}' is not installed.\nPlease install it with: pip install {pkg}\n")
+        exit(1)
+
+smtplib = _import_or_exit('smtplib')
+MIMEText = _import_or_exit('email.mime.text', 'email', 'email.mime.text').MIMEText
+MIMEMultipart = _import_or_exit('email.mime.multipart', 'email', 'email.mime.multipart').MIMEMultipart
+MIMEImage = _import_or_exit('email.mime.image', 'email', 'email.mime.image').MIMEImage
+datetime = _import_or_exit('datetime')
+cv2 = _import_or_exit('cv2')
+os = _import_or_exit('os')
+re = _import_or_exit('re')
+dotenv = _import_or_exit('dotenv', 'python-dotenv')
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    print("\n[ERROR] Required package 'python-dotenv' is not installed.\nPlease install it with: pip install python-dotenv\n")
+    exit(1)
+try:
+    from twilio.rest import Client
+except ImportError:
+    print("\n[ERROR] Required package 'twilio' is not installed.\nPlease install it with: pip install twilio\n")
+    exit(1)
+phonenumbers = _import_or_exit('phonenumbers')
+try:
+    from phonenumbers import geocoder, carrier
+except ImportError:
+    print("\n[ERROR] Required package 'phonenumbers' is not installed.\nPlease install it with: pip install phonenumbers\n")
+    exit(1)
+requests = _import_or_exit('requests')
+logging = _import_or_exit('logging')
 
 
 

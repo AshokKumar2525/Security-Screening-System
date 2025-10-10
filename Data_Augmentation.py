@@ -1,9 +1,21 @@
-import os
-import random
-from PIL import Image, ImageDraw
-from torchvision import transforms
-import torchvision
-from tqdm import tqdm
+
+def _import_or_exit(module, pip_name=None, import_name=None):
+    try:
+        if import_name:
+            return __import__(import_name, fromlist=[module])
+        return __import__(module)
+    except ImportError:
+        pkg = pip_name if pip_name else module
+        print(f"\n[ERROR] Required package '{pkg}' is not installed.\nPlease install it with: pip install {pkg}\n")
+        exit(1)
+
+os = _import_or_exit('os')
+random = _import_or_exit('random')
+PIL_Image = _import_or_exit('PIL.Image', 'Pillow', 'PIL.Image')
+PIL_ImageDraw = _import_or_exit('PIL.ImageDraw', 'Pillow', 'PIL.ImageDraw')
+transforms = _import_or_exit('torchvision.transforms', 'torchvision', 'torchvision.transforms')
+torchvision = _import_or_exit('torchvision')
+tqdm = _import_or_exit('tqdm')
 
 # Config
 data_dir = "data"
