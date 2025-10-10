@@ -20,7 +20,7 @@ This project is a Real-Time Security Screening System utilizing face recognition
 1. Real-time face detection using OpenCV.
 2. Facial encoding and matching using the face_recognition library.
 3. Advanced data augmentation for more diverse images.
-4. 10-second continuous match confirmation to avoid false triggers.
+4. 10-second continuous match confirmation to avoid false triggers. The system uses a standard threshold of 0.4 face distance or 60% confidence score to determine a match. Admin can manually change the threshold settings via the GUI. The threshold setting is specifically designed to range upto 0.39 face distance or only from 60-100 % match, since we are prioritising a strict face recognition in order to avoid mistaken identity & prevent unnecessary public alerts.
 5. Threat & Safe Alarms:
     1. Threat Alarm: When a known individual is detected
     2. Safe Alarm: When no match is found
@@ -63,6 +63,8 @@ project/
 ├── image_logs/
 │   └── matched_individual_image.jpg
 │
+├── config/
+│   └──system_config.json
 ├── csv_logs/
 │   └──security_log.csv
 │
@@ -97,6 +99,8 @@ __data/__: Each subfolder represents an individual, containing multiple images t
 __gui/__: Logic for the graphical User Inerface of the System.
 
 __image_log/__: If a match is found, the individual's image is automatically logged here.If it doesn't exist, created automatically.
+
+__config/__: Stores file for threshold configuration settings.
 
 __csv_log/__: If a match is found, the individual's data is automatically logged here in a csv file.If it doesn't exist, created automatically. The gui has a 'export logs' button to export and download this file when needed.
 
