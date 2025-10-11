@@ -76,7 +76,8 @@ project/
 │   └── yolov5n_best.pt
 │
 ├── yolov5/
-│   
+│
+|── tests/ 
 │
 ├── saveencodings
 ├── Data_Augmentation.py
@@ -109,6 +110,8 @@ __Readme_images__/: Stores images used in documentation.
 __models/__: Contains the trained model weights (yolov5n_best.pt) and related configuration files (data.yaml) used for accessory detection.
 
 __yolov5/__: Includes a minimal set of files from the official Ultralytics YOLOv5 repository required to run inference with the custom-trained model.
+
+__tests/__: Holds unit test scripts for automated testing of certain modules to catch bug quickly. Like scripts for testing if the accessory detection working correctly, for face encoding saving and message modules.
 
 __encodings.pkl__: A binary file storing the precomputed face encodings and names, used to speed up face recognition in the main application.
 
