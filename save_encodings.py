@@ -1,7 +1,17 @@
-# save_encodings.py
-import os
-import pickle
-import face_recognition
+
+
+# Only use _import_or_exit for simple imports
+def _import_or_exit(module, pip_name=None):
+    try:
+        return __import__(module)
+    except ImportError:
+        pkg = pip_name if pip_name else module
+        print(f"\n[ERROR] Required package '{pkg}' is not installed.\nPlease install it with: pip install {pkg}\n")
+        exit(1)
+
+os = _import_or_exit('os')
+pickle = _import_or_exit('pickle')
+face_recognition = _import_or_exit('face_recognition')
 
 data_path = "data/"
 encodings_path = "encodings/face_encodings.pkl"
