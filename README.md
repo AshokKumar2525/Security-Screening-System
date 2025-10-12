@@ -49,13 +49,14 @@
 
 **📑 Table of Contents**
 
-- [Problem Statement](#problem-statement)
-- [Proposed Solution](#proposed-solution)
-- [Features](#features)
-- [Workflow](#workflow)
-- [Note](#note)
+- [Problem Statement](#-problem-statement)
+- [Proposed Solution](#-proposed-solution)
+- [Contributors and learning resources](#-contributors-and-learning-resources)
+- [Features](#-features)
+- [Workflow](#-workflow)
+- [Note](#-note)
 - [Acknowledgement](#acknowledgments)
-- [License](#license)
+- [License](#-license)
 - [Legal](#legal)
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
@@ -77,14 +78,14 @@
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
-**🧩 Problem Statement**
+## 🧩 Problem Statement
 
 In places like airports, hotels, and event venues, security checks are usually done by humans. They check ID cards and watch people manually. But this process takes a lot of time and can have many mistakes. For example, someone might use a fake ID, or look very similar to another person, and the security team might not notice. It’s also hard for them to quickly find people who are dangerous or not allowed to enter.
 Because of this, there is a growing need for a better system. We need a smart, automatic solution that can check people’s identities using their face (facial recognition). This system should work smoothly without stopping the normal flow of people. It should also be safe, accurate, and easy to use in many places.
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**💡 Proposed Solution**
+## 💡 Proposed Solution
 
 We are creating a smart security system that uses facial recognition with the help of OpenCV. This system will work in real-time using a webcam at places like airports or hotels.
 When a person walks in front of the camera, the system will scan their face and compare it with a database of known criminals, wanted people, or other threats.
@@ -93,14 +94,14 @@ If there’s no match and the person is safe, a safe signal will be shown, and t
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**👥 Contributors and Learning Resources**
+## 👥 Contributors and Learning Resources
 
 As of July 2025, this project is a part of GirlScript Summer of Code 2025. Please read the README file carefully to understand the project workflow. For contribution tips and extended documentation, see the [Learn Guide](./learn.md).
 Only the issue with the label __gssoc25__ are open for GSSoC contributors right now.
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**✨ Features**
+## ✨ Features
 
 1. The system uses a webcam to scan each person and detect their face.
 2. Before running face recognition, the system now uses a YOLOv5-based **Accessory Detection Module** to check if the person is wearing any **mask, sunglasses, or cap**.
@@ -120,7 +121,7 @@ Only the issue with the label __gssoc25__ are open for GSSoC contributors right 
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**🔁 Workflow**
+## 🔁 Workflow
 
 The system starts by organizing images into folders—one for each wanted person. More images improve accuracy. These images are then encoded using the face_recognition library, converting facial features into numerical values and labeling them based on folder names.
 
@@ -235,7 +236,7 @@ git push origin YourBranchName
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**📝 Note**
+## 📝 Note
 
 1. This project is a working prototype built for security checkpoint scenarios. It showcases the core logic of real-time facial recognition and threat detection. The system is modular and can be expanded with IoT devices or a GUI if needed.
 
@@ -257,20 +258,20 @@ git push origin YourBranchName
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**Legal**
+## Legal
 - Uses [Ultralytics YOLOv5](https://github.com/ultralytics/yolov5) (**AGPL-3.0**).  
 - Custom weights (`yolov5n_best.pt`) trained via RoboFlow.  
 - **AGPL-3.0 applies to all derivative works.**
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**📜 Code of Conduct**
+## 📜 Code of Conduct
 
 Please refer to the [`Code of Conduct`](https://github.com/SomdattaNag/Security-Screening-System/blob/main/codeofConduct.md) for details on contributing guidelines and community standards.
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
-**🤝👤 Contribution Guidelines**
+## 🤝👤 Contribution Guidelines
 
 We love our contributors! Please read the [Readme](./READEME.md) and [Learn Guide](./learn.md) carefully.
 
@@ -308,7 +309,7 @@ Feel free to open issues or discussions if you have any feedback, feature sugges
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
-**📄 License**
+## 📄 License
 
 This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).
 
